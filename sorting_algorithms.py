@@ -12,4 +12,13 @@ def bubble_sort(lst: list, ascending=True):
         if not swapped: # no more swapping needed, list is ordered
             return lst
 
-print(bubble_sort([3, 2, 88, 4, 2, 5, 9], False))
+def selection_sort(lst: list):
+    for i in range(len(lst) - 1):
+        min_index = i
+
+        for j in range(i + 1, len(lst)): # start from the next index
+            if lst[j] < lst[min_index]:
+                min_index = j
+
+        lst[i], lst[min_index] = lst[min_index], lst[i] # switch positions with the minimum and current
+    return lst

@@ -1,4 +1,6 @@
 import random as rnd
+import time
+
 import pygame
 
 pygame.init()
@@ -13,13 +15,16 @@ class DrawInformation:
     BACKGROUND_COLOR = WHITE
     SIDE_PAD = 100 # in px
     TOP_PAD = 150 # in px
-    LEFT_SIDE_MENU = 400 # left side menu 300 px
+    LEFT_SIDE_MENU = 420 # left side menu 300 px
 
     # init fonts
     FONT = pygame.font.SysFont('comicsans', 30)
     SMALL_FONT = pygame.font.SysFont('comicsans', 25)
 
-    COLORS = [GRAY, (160, 160, 160), (192, 192, 192)]
+    COLORS: list = [GRAY, (160, 160, 160), (192, 192, 192)]
+
+    MENU_TEXT: list = ["space - Sort", "r - Restart", "a - Ascending", "d - Descending", "1 - Bubble sort",
+                       "2 - Selection sort"]
 
 
     def __init__(self, width: int, height: int, numbers_lst: list):
@@ -48,7 +53,8 @@ class DrawInformation:
 
 def draw_lst(draw_info: DrawInformation, color_positions={}, clear_bg=False):
     if clear_bg:
-        clear_rect = (draw_info.SIDE_PAD // 2, draw_info.TOP_PAD, draw_info.width - draw_info.SIDE_PAD,
+        clear_rect = ((draw_info.SIDE_PAD + draw_info.LEFT_SIDE_MENU) // 2,
+                      draw_info.TOP_PAD, draw_info.width - draw_info.SIDE_PAD - draw_info.LEFT_SIDE_MENU,
                       draw_info.height - draw_info.TOP_PAD)
         pygame.draw.rect(draw_info.window, draw_info.WHITE, clear_rect)  # clear with white rect
 
@@ -68,7 +74,7 @@ def draw_lst(draw_info: DrawInformation, color_positions={}, clear_bg=False):
 
     if clear_bg:
         pygame.display.update()
-        # time.sleep(0.2)
+        time.sleep(1) # add time to see the actual color sort happening
 
 def draw(draw_info: DrawInformation, algorithm_name: str, ascending: bool):
     draw_info.window.fill(draw_info.BACKGROUND_COLOR)
@@ -82,13 +88,12 @@ def draw_text(draw_info: DrawInformation, algorithm_name, ascending):
     draw_info.window.blit(title, (draw_info.width/2 - title.get_width()/2 , 5))
 
     # draw the line separating from the menu
-    menu_x = draw_info.start_x - 50
+    menu_x = draw_info.start_x - 40
     pygame.draw.line(draw_info.window, draw_info.GRAY, (menu_x, 0), (menu_x, draw_info.height), 2)
 
     # create menu texts
-    text_menu_ls = ["space - sort", "r - Restart", "a - ascending", "d - descending"]
     labels = []
-    for text in text_menu_ls:
+    for text in draw_info.MENU_TEXT:
         labels.append(draw_info.SMALL_FONT.render(text, 1, draw_info.BLACK))
 
     y_title_position = 10
@@ -97,10 +102,6 @@ def draw_text(draw_info: DrawInformation, algorithm_name, ascending):
         draw_info.window.blit(label, (x_title_position, y_title_position))
         y_title_position += 50
 
-    # controls = draw_info.FONT.render("1 - sort1, \n 2 - sort2", 1, draw_info.BLACK)
-    # draw_info.window.blit(controls, (0, 10))
-
-
 def generate_list(n: int, min_val: int, max_val: int):
     return [rnd.randint(min_val, max_val) for _ in range(n)]
 
@@ -108,15 +109,17 @@ def main():
     run_visualization = True
     clock = pygame.time.Clock()
 
-    n = 50
+    n = 40
     min_val = 1
-    max_val = 10
+    max_val = 15
 
     lst = generate_list(n, min_val, max_val)
     draw_information = DrawInformation(1000, 600, lst)
 
     sorting = False
     ascending = True
+
+    # default sorting
     sorting_algo = bubble_sort
     sorting_algo_name = "Bubble Sort"
     sorting_generator = None
@@ -153,8 +156,13 @@ def main():
             elif event.key == pygame.K_d and not sorting:
                 ascending = False
 
-            # if event.key == pygame.K_b:
-            #     bubble_sort(draw_information)
+            elif event.key == pygame.K_1 and not sorting:
+                sorting_algo = bubble_sort
+                sorting_algo_name = "Bubble Sort"
+
+            elif event.key == pygame.K_2 and not sorting:
+                sorting_algo = selection_sort
+                sorting_algo_name = "Selection Sort"
 
     pygame.quit()
 
@@ -175,6 +183,20 @@ def bubble_sort(draw_info: DrawInformation, ascending=True):
         if not swapped: # no more swapping needed, list is ordered
             return lst
 
+# O(n^2)
+def selection_sort(draw_info: DrawInformation, ascending=True):
+    lst = draw_info.lst
+    for i in range(len(lst) - 1):
+        min_index = i
+
+        for j in range(i + 1, len(lst)): # start from the next index
+            if lst[j] < lst[min_index]:
+                min_index = j
+
+        lst[i], lst[min_index] = lst[min_index], lst[i] # switch positions with the minimum and current
+        draw_lst(draw_info, color_positions={min_index: draw_info.GREEN, i: draw_info.RED}, clear_bg=True)
+        yield True
+    return lst
 
 if __name__ == "__main__":
     main()
