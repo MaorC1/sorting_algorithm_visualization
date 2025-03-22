@@ -1,9 +1,9 @@
 import random as rnd
 import time
-
 import pygame
 
 pygame.init()
+
 
 class DrawInformation:
     WHITE = 255, 255, 255
@@ -13,9 +13,9 @@ class DrawInformation:
     RED = 255, 0, 0
 
     BACKGROUND_COLOR = WHITE
-    SIDE_PAD = 100 # in px
-    TOP_PAD = 150 # in px
-    LEFT_SIDE_MENU = 420 # left side menu 300 px
+    SIDE_PAD = 100  # in px
+    TOP_PAD = 150  # in px
+    LEFT_SIDE_MENU = 420  # left side menu 300 px
 
     # init fonts
     FONT = pygame.font.SysFont('comicsans', 30)
@@ -25,7 +25,6 @@ class DrawInformation:
 
     MENU_TEXT: list = ["space - Sort", "r - Restart", "a - Ascending", "d - Descending", "1 - Bubble sort",
                        "2 - Selection sort"]
-
 
     def __init__(self, width: int, height: int, numbers_lst: list):
         self.width = width
@@ -51,36 +50,37 @@ class DrawInformation:
         # pygame start from the top left corner, the start of the block is the bottom left size (dividing by 2)
         self.start_x = (self.LEFT_SIDE_MENU + self.SIDE_PAD) // 2
 
+
 def draw_lst(draw_info: DrawInformation, color_positions={}, clear_bg=False):
     if clear_bg:
-        clear_rect = ((draw_info.SIDE_PAD + draw_info.LEFT_SIDE_MENU) // 2,
-                      draw_info.TOP_PAD, draw_info.width - draw_info.SIDE_PAD - draw_info.LEFT_SIDE_MENU,
-                      draw_info.height - draw_info.TOP_PAD)
+        clear_rect = (draw_info.start_x, draw_info.TOP_PAD - 50, draw_info.width, draw_info.height)
         pygame.draw.rect(draw_info.window, draw_info.WHITE, clear_rect)  # clear with white rect
 
     for i, value in enumerate(draw_info.lst):
         # multiple but each index to move the bar on the x-axis to the right (no overlap)
         x = draw_info.start_x + (i * draw_info.block_width)
-        y = draw_info.height - (value - draw_info.min_val + 1) * draw_info.block_height # add 1 to display the min values
+        y = draw_info.height - (value - draw_info.min_val + 1) * draw_info.block_height  # add 1 to display the min values
 
-        block_color = draw_info.COLORS[i % 3] # always would give 0,1 or 2
+        block_color = draw_info.COLORS[i % 3]  # always would give 0,1 or 2
 
         if i in color_positions:
             print(i)
-            block_color = color_positions[i] # change the color
+            block_color = color_positions[i]  # change the color
             print(block_color)
 
         pygame.draw.rect(surface=draw_info.window, color=block_color, rect=(x, y, draw_info.block_width, draw_info.height))
 
     if clear_bg:
         pygame.display.update()
-        time.sleep(1) # add time to see the actual color sort happening
+        time.sleep(0.05)  # add time to see the actual color sort happening
+
 
 def draw(draw_info: DrawInformation, algorithm_name: str, ascending: bool):
     draw_info.window.fill(draw_info.BACKGROUND_COLOR)
     draw_text(draw_info, algorithm_name, ascending)
     draw_lst(draw_info)
     pygame.display.update()  # render the display
+
 
 def draw_text(draw_info: DrawInformation, algorithm_name, ascending):
     # display title with sorting algorithm name and sorting order
@@ -102,8 +102,10 @@ def draw_text(draw_info: DrawInformation, algorithm_name, ascending):
         draw_info.window.blit(label, (x_title_position, y_title_position))
         y_title_position += 50
 
+
 def generate_list(n: int, min_val: int, max_val: int):
     return [rnd.randint(min_val, max_val) for _ in range(n)]
+
 
 def main():
     run_visualization = True
@@ -125,24 +127,25 @@ def main():
     sorting_generator = None
 
     while run_visualization:
-        clock.tick(60) # fps of the loop
+        clock.tick(60)  # fps of the loop
 
         if sorting:
             try:
                 next(sorting_generator)
             except StopIteration as e:
-                sorting = False # no more values
+                sorting = False  # no more values
 
         draw(draw_information, sorting_algo_name, ascending)
 
-        for event in pygame.event.get(): # get all the events that happened
+        for event in pygame.event.get():  # get all the events that happened
             if event == pygame.QUIT:
                 run_visualization = False
 
-            if event.type != pygame.KEYDOWN: # need this so the program wouldn't crash immediately
+            if event.type != pygame.KEYDOWN:  # need this so the program wouldn't crash immediately
                 continue
 
-            if event.key == pygame.K_r: # press r to restart the list values
+            # menu selection keys
+            if event.key == pygame.K_r:  # press r to restart the list values
                 lst = generate_list(n, min_val, max_val)
                 draw_information.set_lst(lst)
 
@@ -166,6 +169,7 @@ def main():
 
     pygame.quit()
 
+
 # O(n^2)
 def bubble_sort(draw_info: DrawInformation, ascending=True):
     lst = draw_info.lst
@@ -176,27 +180,33 @@ def bubble_sort(draw_info: DrawInformation, ascending=True):
             num1 = lst[j]
             num2 = lst[j + 1]
             if (num1 > num2 and ascending) or (num1 < num2 and not ascending):
-                lst[j], lst[j + 1] = lst[j + 1], lst[j] # swap num1 and num2
+                lst[j], lst[j + 1] = lst[j + 1], lst[j]  # swap num1 and num2
                 swapped = True
                 draw_lst(draw_info, color_positions={j: draw_info.GREEN, j+1: draw_info.RED}, clear_bg=True)
-                yield True # return to the main event so the swap can be visualized
-        if not swapped: # no more swapping needed, list is ordered
+                yield True  # return to the main event so the swap can be visualized
+        if not swapped:  # no more swapping needed, list is ordered
             return lst
 
+
 # O(n^2)
+# TODO add descending order sort
 def selection_sort(draw_info: DrawInformation, ascending=True):
     lst = draw_info.lst
     for i in range(len(lst) - 1):
         min_index = i
 
-        for j in range(i + 1, len(lst)): # start from the next index
+        for j in range(i + 1, len(lst)):  # start from the next index
             if lst[j] < lst[min_index]:
                 min_index = j
+            draw_lst(draw_info, color_positions={min_index: draw_info.GREEN, j: draw_info.RED}, clear_bg=True)
+            yield True
 
-        lst[i], lst[min_index] = lst[min_index], lst[i] # switch positions with the minimum and current
-        draw_lst(draw_info, color_positions={min_index: draw_info.GREEN, i: draw_info.RED}, clear_bg=True)
+        lst[i], lst[min_index] = lst[min_index], lst[i]  # switch positions with the minimum and current
+        draw_lst(draw_info, color_positions={min_index: draw_info.RED, i: draw_info.RED}, clear_bg=True)
         yield True
+
     return lst
+
 
 if __name__ == "__main__":
     main()
